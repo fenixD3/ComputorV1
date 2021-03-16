@@ -1,12 +1,13 @@
 import argparse
 import sys
+import re
+
 from parser import Parser
 
 
 def process(polynomial, isVerbose, needGraphic):
-    parser = Parser(polynomial.split(), isVerbose, needGraphic)
+    parser = Parser(re.split(r'\+', polynomial), isVerbose, needGraphic)
     parser.parse()
-    print(parser.mPolynomialBuffer)
 
 if __name__ == '__main__':
     argParser = argparse.ArgumentParser(description='Computor Vision V1')
