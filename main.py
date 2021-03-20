@@ -1,3 +1,4 @@
+# coding=utf-8
 import argparse
 import sys
 import re
@@ -6,7 +7,7 @@ from parser import Parser
 
 
 def process(polynomial, isVerbose, needGraphic):
-    parser = Parser(re.split(r'\+', polynomial), isVerbose, needGraphic)
+    parser = Parser(polynomial.split(), isVerbose, needGraphic)
     parser.parse()
 
 if __name__ == '__main__':
