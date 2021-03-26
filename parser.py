@@ -8,7 +8,7 @@ class Parser:
         self.mPolynomial = polynomial
         self.mIsVerbose = isVerbose
         self.mNeedGraphic = needGraphic
-        self.mParsedPolynomial = list()
+        self.mParsedPolynomial = dict()
         self.sidesVariableLetters = list()
 
     def parse(self):
@@ -37,7 +37,17 @@ class Parser:
         else:
             polynomial_side = polynomial_side.replace('-', '+-')
         side_array = polynomial_side.split('+')  # replace '+' to const var
-        self.__check_polynomial_side(side_array)
+        coefficients, degrees = self.__check_polynomial_side(side_array)
+        if isRight:
+            coefficients = list(map(lambda coefficient: -float(coefficient), coefficients))
+        else:
+            coefficients = list(map(float, coefficients))
+        degrees = list(map(int, degrees))
+        for degree in degrees:
+            if self.mParsedPolynomial.get(degree) is None:
+                self.mParsedPolynomial[degree] = coefficients[degree]
+            else:
+                self.mParsedPolynomial[degree] += coefficients[degree]
 
     def __check_polynomial_side(self, side_array):
         if self.mIsVerbose:
@@ -74,3 +84,9 @@ class Parser:
         if not degrees == list(map(str, range(len(degrees)))):
             print_error("Degrees must increment from 0 to len(degrees) - 1")
         return coefficients, degrees
+
+    def print_reduced_form(self):
+        print("Reduced form:", sep=' ', end='')
+        variable = self.sidesVariableLetters[0]
+        for degree, coefficient in self.mParsedPolynomial.items():
+            pass

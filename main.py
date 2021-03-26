@@ -8,6 +8,7 @@ from parser import Parser
 def process(polynomial, isVerbose, needGraphic):
     parser = Parser(polynomial, isVerbose, needGraphic)
     parser.parse()
+    parser.print_reduced_form()
 
 if __name__ == '__main__':
     argParser = argparse.ArgumentParser(description='Computor Vision V1')
