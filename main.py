@@ -1,5 +1,5 @@
 # coding=utf-8
-import argparse
+from argparse_custom_error import ThrowingArgumentParser, ArgumentParserError
 import sys
 
 from parser import Parser
@@ -14,13 +14,13 @@ def process(polynomial, isVerbose, needGraphic):
     polynomial.solve()
 
 if __name__ == '__main__':
-    argParser = argparse.ArgumentParser(description='Computor Vision V1')
+    argParser = ThrowingArgumentParser(description='Computor Vision V1')
     argParser.add_argument('-v', '--verbose', action='store_true', dest='isVerbose', help='Write information about full steps')
     argParser.add_argument('-g', '--graphic', action='store_true', dest='needGraphic', help='Show a graphic of input polynomial')
     argParser.add_argument('polynomial', type=str, help='Input polynomial')
-    try: # Возможно забить на обработку исключений
+    try:
         args = argParser.parse_args()
-    except BaseException:
+    except ArgumentParserError:
         argParser.print_help()
         sys.exit(1)
     process(args.polynomial, args.isVerbose, args.needGraphic)
