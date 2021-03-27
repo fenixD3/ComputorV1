@@ -8,8 +8,8 @@ class Parser:
         self.mPolynomial = polynomial
         self.mIsVerbose = isVerbose
         self.mNeedGraphic = needGraphic
-        self.mParsedPolynomial = dict()
-        self.sidesVariableLetters = list()
+        self._parsed_polynomial = dict()
+        self._sides_variable_letters = list()
 
     def parse(self):
         if '=' not in self.mPolynomial:
@@ -44,10 +44,10 @@ class Parser:
             coefficients = list(map(float, coefficients))
         degrees = list(map(int, degrees))
         for degree in degrees:
-            if self.mParsedPolynomial.get(degree) is None:
-                self.mParsedPolynomial[degree] = coefficients[degree]
+            if self._parsed_polynomial.get(degree) is None:
+                self._parsed_polynomial[degree] = coefficients[degree]
             else:
-                self.mParsedPolynomial[degree] += coefficients[degree]
+                self._parsed_polynomial[degree] += coefficients[degree]
 
     def __check_polynomial_side(self, side_array):
         if self.mIsVerbose:
@@ -72,21 +72,21 @@ class Parser:
                 print_error("Variable must be a letter")
 
         coefficients = [member.split('*')[0] for member in side_array]
-        variables = [member.split('*')[1].split('^')[0] for member in side_array]
+        variables = [member.split('*')[1].split('^')[0].lower() for member in side_array]
         degrees = [member.split('*')[1].split('^')[1] for member in side_array]
 
         for variable in variables[1:]:
             if variable != variables[0]:
                 print_error("Variables must contain the same letters")
-        self.sidesVariableLetters.append(variables[0])
-        if len(self.sidesVariableLetters) == 2 and self.sidesVariableLetters[0] != self.sidesVariableLetters[1]:
+        self._sides_variable_letters.append(variables[0])
+        if len(self._sides_variable_letters) == 2 and self._sides_variable_letters[0] != self._sides_variable_letters[1]:
             print_error("Variables letter in left and right side must be equaled")
         if not degrees == list(map(str, range(len(degrees)))):
             print_error("Degrees must increment from 0 to len(degrees) - 1")
         return coefficients, degrees
 
-    def print_reduced_form(self):
-        print("Reduced form:", sep=' ', end='')
-        variable = self.sidesVariableLetters[0]
-        for degree, coefficient in self.mParsedPolynomial.items():
-            pass
+    def get_parsed_polynomial(self):
+        return self._parsed_polynomial
+
+    def get_variable_char(self):
+        return self._sides_variable_letters[0]

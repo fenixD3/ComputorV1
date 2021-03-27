@@ -3,12 +3,15 @@ import argparse
 import sys
 
 from parser import Parser
+from polynomial import Polynomial
 
 
 def process(polynomial, isVerbose, needGraphic):
     parser = Parser(polynomial, isVerbose, needGraphic)
     parser.parse()
-    parser.print_reduced_form()
+    polynomial = Polynomial(parser.get_parsed_polynomial(), parser.get_variable_char(), parser.mNeedGraphic, parser.mIsVerbose)
+    polynomial.print_reduced_form()
+    polynomial.solve()
 
 if __name__ == '__main__':
     argParser = argparse.ArgumentParser(description='Computor Vision V1')
