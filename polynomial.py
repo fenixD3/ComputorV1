@@ -74,7 +74,10 @@ class Polynomial:
         a = self.polynomial[2]
         b = self.polynomial.get(1, 0)
         c = self.polynomial.get(0, 0)
-        discriminant = b * b - 4. * a * c
+        discriminant = b ** 2 - 4. * a * c
+        if self._is_verbose:
+            print("Discriminant = {}".format(discriminant))
+
         if discriminant == 0:
             result = -b / (2 * a)
             print("Discriminant equal 0, the solution is:\n{:.2f}".format(result))
