@@ -76,7 +76,7 @@ class Parser:
     def __check_variable_degree(self, var_with_degree):
         if not (EXPONENT_CHAR in var_with_degree):
             variable = var_with_degree
-            self.__check_variable(variable)
+            self.__check_variable(variable.lower())
             return '1'
         else:
             variable, member_degree = var_with_degree.split(EXPONENT_CHAR)
