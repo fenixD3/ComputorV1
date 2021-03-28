@@ -17,7 +17,6 @@ class Parser:
     def parse(self):
         if '=' not in self.polynomial_str:
             print_error("Symbol = isn't found in polynomial")
-
         try:
             left_side, right_side = self.polynomial_str.split('=')
         except ValueError:
@@ -49,57 +48,80 @@ class Parser:
             print("Split {} side to polynomial members in array".format("right" if is_right else "left"))
             print('\t', side_array, sep='')
 
-        coefficients, degrees = self.__check_polynomial_side(side_array)
-        if self.is_verbose:
-            print("Split {} side's polynomial members to coefficients and degrees".format("right" if is_right else "left"))
-            print('\tCoefficients: {}; Degrees: {}'.format(coefficients, degrees), sep='')
-        if is_right:
-            coefficients = list(map(lambda coefficient: -float(coefficient), coefficients))
-        else:
-            coefficients = list(map(float, coefficients))
-        degrees = list(map(int, degrees))
+        self.__check_polynomial_side(side_array, is_right)
 
-        for degree in degrees:
-            if self._parsed_polynomial.get(degree) is None:
-                self._parsed_polynomial[degree] = coefficients[degree]
-            else:
-                self._parsed_polynomial[degree] += coefficients[degree]
-
-    def __check_polynomial_side(self, side_array):
+    def __check_polynomial_side(self, side_array, is_right):
         for element in side_array:
+            global coefficient
+            global degree
             has_multiple = re.search(r'-\w*\.\w*\*|-\w*\*|\w*\*', element)
-            if not has_multiple:
-                print_error("There isn't multiplication operation")
-            coefficient, var_with_degree = element.split(MULTIPLE_CHAR)
-            try:
-                float(coefficient)
-            except ValueError:
-                print_error("Coefficient isn't a number")
-            has_exponent = re.search(r'\^', var_with_degree)
-            if not has_exponent:
-                print_error("There isn't exponent char")
-            variable, degree = var_with_degree.split(EXPONENT_CHAR)
-            if not variable.isalpha():
-                print_error("Variable must be a letter")
-            if not (degree.isnumeric() and int(degree) >= 0):
-                print_error("Degree must be integer equal or greater 0")
+            if has_multiple:
+                coefficient, var_with_degree = element.split(MULTIPLE_CHAR)
+                self.__check_coefficient(coefficient)
+                degree = self.__check_variable_degree(var_with_degree)
+            else:
+                variable = re.search(r'[a-z|A-Z]', element)
+                if variable:
+                    var_with_degree = element[variable.start():]
+                    coefficient = element[:variable.start()]
+                    self.__check_coefficient(coefficient)
+                    degree = self.__check_variable_degree(var_with_degree)
+                else:
+                    coefficient = element
+                    self.__check_coefficient(coefficient)
+                    degree = 0
+            self.__fill_parsed_polynomial(int(degree), float(coefficient) if not is_right else -float(coefficient))
+            self.__sort_parsed_polynomial()
 
-        coefficients = [member.split(MULTIPLE_CHAR)[0] for member in side_array]
-        variables = [member.split(MULTIPLE_CHAR)[1].split(EXPONENT_CHAR)[0].lower() for member in side_array]
-        degrees = [member.split(MULTIPLE_CHAR)[1].split(EXPONENT_CHAR)[1] for member in side_array]
+    def __check_variable_degree(self, var_with_degree):
+        if not (EXPONENT_CHAR in var_with_degree):
+            variable = var_with_degree
+            self.__check_variable(variable)
+            return '1'
+        else:
+            variable, member_degree = var_with_degree.split(EXPONENT_CHAR)
+            self.__check_degree(member_degree)
+            self.__check_variable(variable.lower())
+            return member_degree
 
-        for variable in variables[1:]:
-            if variable != variables[0]:
-                print_error("Variables must contain the same letters")
-        self._sides_variable_letters.append(variables[0])
-        if len(self._sides_variable_letters) == 2 and self._sides_variable_letters[0] != self._sides_variable_letters[1]:
-            print_error("Variables letter in left and right side must be equaled")
-        if not degrees == list(map(str, range(len(degrees)))):
-            print_error("Degrees must increment from 0 to len(degrees) - 1")
-        return coefficients, degrees
+    def __check_coefficient(self, member_coefficient):
+        try:
+            float(member_coefficient)
+        except ValueError:
+            print_error("Coefficient isn't a number")
+
+    def __check_degree(self, member_degree):
+        if not (member_degree.isnumeric() and int(member_degree) >= 0):
+            print_error("Degree must be integer equal or greater 0")
+
+    def __check_variable(self, variable):
+        if not variable.isalpha():
+            print_error("Variable must be a letter")
+        if len(self._sides_variable_letters) == 0:
+            self._sides_variable_letters.append(variable)
+        if variable != self._sides_variable_letters[0]:
+            print_error("Variables must contain the same letters")
+
+    def __fill_parsed_polynomial(self, member_degree, member_coefficient):
+        if self._parsed_polynomial.get(member_degree) is None:
+            self._parsed_polynomial[member_degree] = member_coefficient
+        else:
+            self._parsed_polynomial[member_degree] += member_coefficient
+
+    def __sort_parsed_polynomial(self):
+        degrees = list(self._parsed_polynomial.keys())
+        degrees.sort()
+        coefficients = list()
+        for degr in degrees:
+            coefficients.append(self._parsed_polynomial[degr])
+        self._parsed_polynomial.clear()
+        for i in range(len(degrees)):
+            self.__fill_parsed_polynomial(degrees[i], coefficients[i])
 
     def get_parsed_polynomial(self):
         return self._parsed_polynomial
 
     def get_variable_char(self):
+        if len(self._sides_variable_letters) == 0:
+            return 'x'
         return self._sides_variable_letters[0]

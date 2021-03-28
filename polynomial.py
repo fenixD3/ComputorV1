@@ -94,7 +94,7 @@ class Polynomial:
                   .format(integral, imaginary, 'i', integral, imaginary, 'i'))
 
     def __plot_graphic(self):
-        a = self.polynomial[2]
+        a = self.polynomial.get(2, 0)
         b = self.polynomial.get(1, 0)
         c = self.polynomial.get(0, 0)
         x = np.linspace(-10, 10, 25)
