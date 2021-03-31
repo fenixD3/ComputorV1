@@ -63,15 +63,14 @@ class Parser:
                 variable = re.search(r'[a-z|A-Z]', element)
                 if variable:
                     var_with_degree = element[variable.start():]
-                    coefficient = element[:variable.start()]
-                    self.__check_coefficient(coefficient)
+                    coefficient = self.__check_coefficient(element[:variable.start()])
                     degree = self.__check_variable_degree(var_with_degree)
                 else:
                     coefficient = element
                     self.__check_coefficient(coefficient)
                     degree = 0
             self.__fill_parsed_polynomial(int(degree), float(coefficient) if not is_right else -float(coefficient))
-            self.__sort_parsed_polynomial()
+        self.__sort_parsed_polynomial()
 
     def __check_variable_degree(self, var_with_degree):
         if not (EXPONENT_CHAR in var_with_degree):
@@ -85,10 +84,13 @@ class Parser:
             return member_degree
 
     def __check_coefficient(self, member_coefficient):
+        if member_coefficient == '':
+            return '1'
         try:
             float(member_coefficient)
         except ValueError:
             print_error("Coefficient isn't a number")
+        return member_coefficient
 
     def __check_degree(self, member_degree):
         if not (member_degree.isnumeric() and int(member_degree) >= 0):

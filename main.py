@@ -1,6 +1,5 @@
-# coding=utf-8
 from argparse_custom_error import ThrowingArgumentParser, ArgumentParserError
-import sys, re
+import sys
 
 from parser import Parser
 from polynomial import Polynomial
