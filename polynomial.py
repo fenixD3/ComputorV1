@@ -1,7 +1,11 @@
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
 from helpers import absolut, float_to_int, sqrt
+from fractions import Fraction
+
+matplotlib.use('TkAgg')
 
 
 class Polynomial:
@@ -54,51 +58,61 @@ class Polynomial:
         elif polynomial_degree == 2:
             self.__solve_second_degree_function()
         if self._need_graph:
-            self.__plot_graphic()
+            self.__plot_graphic(polynomial_degree)
 
     def __solve_first_degree_function(self):
         """
             ax + b = 0
         """
-        result = 0
         a = self.polynomial[1]
+        a_fract = Fraction(a)
         b = self.polynomial.get(0, 0)
-        if b != 0:
-            result = -b / a
+        b_fract = Fraction(b)
+        result = -b / a
+        result_fract = -b_fract / a_fract
         print("The solution is:\n{:.2f}".format(result))
+        print("The solution in fraction form is:\n{}".format(result_fract))
 
     def __solve_second_degree_function(self):
         """
             ax^2 + bx + c = 0
         """
         a = self.polynomial[2]
+        a_fract = Fraction(a)
         b = self.polynomial.get(1, 0)
+        b_fract = Fraction(b)
         c = self.polynomial.get(0, 0)
+        c_fract = Fraction(c)
         discriminant = b ** 2 - 4. * a * c
         if self._is_verbose:
             print("Discriminant = {}".format(discriminant))
 
         if discriminant == 0:
             result = -b / (2 * a)
+            result_fract = -b_fract / (2 * a_fract)
             print("Discriminant equal 0, the solution is:\n{:.2f}".format(result))
+            print("The solution in fraction form is:\n{}".format(result_fract))
         elif discriminant > 0:
             result_1 = (-b + sqrt(discriminant)) / (2 * a)
             result_2 = (-b - sqrt(discriminant)) / (2 * a)
             print("Discriminant is strictly positive, the two solutions are:\n{:.2f}\n{:.2f}"
                   .format(result_1, result_2))
+            print("The solutions in fraction form are:\n{} +/- \u221a{}*{}"
+                  .format(-b_fract / (2 * a_fract), discriminant, 1 / (2 * a_fract)))
         else:
             discriminant = absolut(discriminant)
             integral = -b / (2 * a)
             imaginary = sqrt(discriminant) / (2 * a)
             print("Discriminant is negative, the two complex solutions are:\n{:.2f}+{:.2f}*{}\n{:.2f}-{:.2f}*{}"
                   .format(integral, imaginary, 'i', integral, imaginary, 'i'))
+            print("The solutions in fraction form are:\n{} +/- \u221a{}*i*{}"
+                  .format(-b_fract / (2 * a_fract), discriminant, 1 / (2 * a_fract)))
 
-    def __plot_graphic(self):
-        a = self.polynomial.get(2, 0)
-        b = self.polynomial.get(1, 0)
-        c = self.polynomial.get(0, 0)
+    def __plot_graphic(self, polynomial_degree):
         x = np.linspace(-10, 10, 25)
-        y = a * x ** 2 + b * x + c
+        y = 0
+        for i in range(polynomial_degree + 1):
+            y += self.polynomial.get(i, 0) * x ** i
         plt.plot(x, y)
         plt.grid(True)
         plt.show()
