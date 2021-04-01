@@ -4,6 +4,7 @@ from helpers import print_error
 MULTIPLE_CHAR = '*'
 ADDITIONAL_CHAR = '+'
 EXPONENT_CHAR = '^'
+DIVISION_CHAR = '/'
 
 
 class Parser:
@@ -28,8 +29,7 @@ class Parser:
             print("\tLeft side: {}; Right side: {}".format(left_side, right_side))
 
         self.__parse_side(left_side, False)
-        if right_side != '0':
-            self.__parse_side(right_side, True)
+        self.__parse_side(right_side, True)
         if self.is_verbose:
             print("Filled polynomial dictionary (index - degree, value - coefficient)")
             print('\t', self._parsed_polynomial, sep='')
@@ -57,17 +57,16 @@ class Parser:
             has_multiple = re.search(r'-\w*\.\w*\*|-\w*\*|\w*\*', element)
             if has_multiple:
                 coefficient, var_with_degree = element.split(MULTIPLE_CHAR)
-                self.__check_coefficient(coefficient)
+                coefficient = self.__check_coefficient(coefficient)
                 degree = self.__check_variable_degree(var_with_degree)
             else:
-                variable = re.search(r'[a-z|A-Z]', element)
-                if variable:
-                    var_with_degree = element[variable.start():]
-                    coefficient = self.__check_coefficient(element[:variable.start()])
+                has_variable = re.search(r'([a-z,A-Z])([\*,/]\d+)', element)
+                if has_variable:
+                    var_with_degree = has_variable.groups()[0]
+                    coefficient = self.__check_coefficient(has_variable.groups()[1])
                     degree = self.__check_variable_degree(var_with_degree)
                 else:
-                    coefficient = element
-                    self.__check_coefficient(coefficient)
+                    coefficient = self.__check_coefficient(element)
                     degree = 0
             self.__fill_parsed_polynomial(int(degree), float(coefficient) if not is_right else -float(coefficient))
         self.__sort_parsed_polynomial()
@@ -86,6 +85,10 @@ class Parser:
     def __check_coefficient(self, member_coefficient):
         if member_coefficient == '':
             return '1'
+
+        has_division = re.search(r'(\d+)/(\d+)', member_coefficient)
+        if has_division:
+            member_coefficient = str(float(has_division.groups()[0]) / float(has_division.groups()[1]))
         try:
             float(member_coefficient)
         except ValueError:
@@ -97,7 +100,7 @@ class Parser:
             print_error("Degree must be integer equal or greater 0")
 
     def __check_variable(self, variable):
-        if not variable.isalpha():
+        if not variable.isalpha() or len(variable) > 1:
             print_error("Variable must be a letter")
         if len(self._sides_variable_letters) == 0:
             self._sides_variable_letters.append(variable)

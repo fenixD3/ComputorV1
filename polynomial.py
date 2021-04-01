@@ -49,6 +49,9 @@ class Polynomial:
             return print("Each real number is solution")
         polynomial_degree = degrees[len(degrees) - 1]
         print('Polynomial degree: {}'.format(polynomial_degree))
+        if self._need_graph:
+            self.__plot_graphic(polynomial_degree)
+
         if polynomial_degree > 2:
             return print("The polynomial degree is strictly greater than 2, I can't solve.")
         if polynomial_degree == 0:
@@ -57,8 +60,6 @@ class Polynomial:
             self.__solve_first_degree_function()
         elif polynomial_degree == 2:
             self.__solve_second_degree_function()
-        if self._need_graph:
-            self.__plot_graphic(polynomial_degree)
 
     def __solve_first_degree_function(self):
         """
