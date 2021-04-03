@@ -30,6 +30,7 @@ class Parser:
 
         self.__parse_side(left_side, False)
         self.__parse_side(right_side, True)
+        self.__sort_parsed_polynomial()
         if self.is_verbose:
             print("Filled polynomial dictionary (index - degree, value - coefficient)")
             print('\t', self._parsed_polynomial, sep='')
@@ -54,22 +55,23 @@ class Parser:
         for element in side_array:
             global coefficient
             global degree
-            has_multiple = re.search(r'-\w*\.\w*\*|-\w*\*|\w*\*', element)
-            if has_multiple:
+            if MULTIPLE_CHAR in element:
                 coefficient, var_with_degree = element.split(MULTIPLE_CHAR)
                 coefficient = self.__check_coefficient(coefficient)
                 degree = self.__check_variable_degree(var_with_degree)
             else:
-                has_variable = re.search(r'([a-z,A-Z])([\*,/]\d+)', element)
-                if has_variable:
-                    var_with_degree = has_variable.groups()[0]
-                    coefficient = self.__check_coefficient(has_variable.groups()[1])
-                    degree = self.__check_variable_degree(var_with_degree)
+                has_fraction_coeff = re.search(r'(\d+[/]?\d*)([a-z,A-Z]+)', element)
+                has_variable = re.search(r'([a-z,A-Z]+)', element)
+                if has_fraction_coeff:
+                    coefficient = self.__check_coefficient(has_fraction_coeff.groups()[0])
+                    degree = self.__check_variable_degree(has_fraction_coeff.groups()[1])
+                elif has_variable:
+                    coefficient = self.__check_coefficient(element[:has_variable.start()])
+                    degree = self.__check_variable_degree(element[has_variable.start():])
                 else:
                     coefficient = self.__check_coefficient(element)
                     degree = 0
             self.__fill_parsed_polynomial(int(degree), float(coefficient) if not is_right else -float(coefficient))
-        self.__sort_parsed_polynomial()
 
     def __check_variable_degree(self, var_with_degree):
         if not (EXPONENT_CHAR in var_with_degree):
