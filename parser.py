@@ -1,10 +1,18 @@
 import re
 from helpers import print_error
+from enum import Enum, auto
 
 MULTIPLE_CHAR = '*'
 ADDITIONAL_CHAR = '+'
 EXPONENT_CHAR = '^'
 DIVISION_CHAR = '/'
+
+
+class PolynomialMemberType(Enum):
+    NumVar = auto()
+    Num = auto()
+    VarNum = auto()
+    Var = auto()
 
 
 class Parser:
@@ -30,11 +38,12 @@ class Parser:
 
         self.__parse_side(left_side, False)
         self.__parse_side(right_side, True)
+        self.__sort_parsed_polynomial()
         if self.is_verbose:
             print("Filled polynomial dictionary (index - degree, value - coefficient)")
             print('\t', self._parsed_polynomial, sep='')
 
-    def __parse_side(self, polynomial_side, is_right):
+    def __parse_side(self, polynomial_side: str, is_right: bool):
         if polynomial_side[0] == '-':
             polynomial_side = '-' + polynomial_side[1:].replace('-', '+-')
         else:
@@ -48,30 +57,55 @@ class Parser:
             print("Split {} side to polynomial members in array".format("right" if is_right else "left"))
             print('\t', side_array, sep='')
 
-        self.__check_polynomial_side(side_array, is_right)
-
-    def __check_polynomial_side(self, side_array, is_right):
+        if self.is_verbose:
+            print("Validate each polynomial member in array above")
         for element in side_array:
-            global coefficient
-            global degree
-            has_multiple = re.search(r'-\w*\.\w*\*|-\w*\*|\w*\*', element)
-            if has_multiple:
-                coefficient, var_with_degree = element.split(MULTIPLE_CHAR)
-                coefficient = self.__check_coefficient(coefficient)
-                degree = self.__check_variable_degree(var_with_degree)
-            else:
-                has_variable = re.search(r'([a-z,A-Z])([\*,/]\d+)', element)
-                if has_variable:
-                    var_with_degree = has_variable.groups()[0]
-                    coefficient = self.__check_coefficient(has_variable.groups()[1])
-                    degree = self.__check_variable_degree(var_with_degree)
-                else:
-                    coefficient = self.__check_coefficient(element)
-                    degree = 0
-            self.__fill_parsed_polynomial(int(degree), float(coefficient) if not is_right else -float(coefficient))
-        self.__sort_parsed_polynomial()
+            self.__parse_polynomial_member(element, is_right)
 
-    def __check_variable_degree(self, var_with_degree):
+    def __parse_polynomial_member(self, polynomial_member: str, is_right: bool):
+        # Нуно дореализовывоть верную обработку такого типа member: 3*5x^2/3x*5
+        global coefficient
+        global degree
+        has_multiple = MULTIPLE_CHAR in polynomial_member
+        if has_multiple:
+            multiple_parts = polynomial_member.split(MULTIPLE_CHAR)
+            for part in multiple_parts:
+                self.__parse_polynomial_member(part, is_right)
+        elif DIVISION_CHAR in polynomial_member:
+            self.__parse_member_with_division(polynomial_member)
+        else:
+            member_type = self.__define_member_type(polynomial_member)
+            if member_type == PolynomialMemberType.VarNum:
+                print_error("Incorrect variable: {}".format(polynomial_member))
+            elif member_type == PolynomialMemberType.NumVar:
+                search_group = re.search(r'(\d+)([a-z,A-Z]+)', polynomial_member)
+                coefficient = self.__check_coefficient(search_group.groups()[0])
+                degree = self.__check_variable_degree_return_degree(search_group.groups()[1])
+            elif member_type == PolynomialMemberType.Num:
+                coefficient = self.__check_coefficient(polynomial_member)
+                degree = 0
+            elif member_type == PolynomialMemberType.Var:
+                coefficient = 1
+                degree = self.__check_variable_degree_return_degree(polynomial_member)
+            self.__fill_parsed_polynomial(int(degree), float(coefficient) if not is_right else -float(coefficient))
+
+    def __parse_member_with_division(self, polynomial_member: str):
+        pass
+
+    def __define_member_type(self, simple_member: str) -> PolynomialMemberType:
+        found_variants = re.search(r'(\d+[a-z,A-Z]+)|(\d+)|([a-z,A-Z]+\d+)|([a-z,A-Z]+)', simple_member)
+        if found_variants.groups().count(None) != 3:
+            print_error("This polynomial member is incorrect: {}".format(simple_member))
+        if found_variants.groups()[0] is not None:
+            return PolynomialMemberType.NumVar
+        elif found_variants.groups()[1] is not None:
+            return PolynomialMemberType.Num
+        elif found_variants.groups()[2] is not None:
+            return PolynomialMemberType.VarNum
+        elif found_variants.groups()[3] is not None:
+            return PolynomialMemberType.Var
+
+    def __check_variable_degree_return_degree(self, var_with_degree: str) -> str:
         if not (EXPONENT_CHAR in var_with_degree):
             variable = var_with_degree
             self.__check_variable(variable.lower())
@@ -82,7 +116,7 @@ class Parser:
             self.__check_variable(variable.lower())
             return member_degree
 
-    def __check_coefficient(self, member_coefficient):
+    def __check_coefficient(self, member_coefficient: str) -> str:
         if member_coefficient == '':
             return '1'
 
@@ -95,7 +129,7 @@ class Parser:
             print_error("Coefficient isn't a number")
         return member_coefficient
 
-    def __check_degree(self, member_degree):
+    def __check_degree(self, member_degree: str):
         if not (member_degree.isnumeric() and int(member_degree) >= 0):
             print_error("Degree must be integer equal or greater 0")
 
